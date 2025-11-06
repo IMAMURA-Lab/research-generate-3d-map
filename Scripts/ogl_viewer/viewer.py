@@ -233,7 +233,7 @@ class GLViewer:
         glutInitWindowSize(int(width), int(height))
         glutInitWindowPosition(0, 0) # The window opens at the upper left corner of the screen
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_SRGB)
-        glutCreateWindow(b"ZED Spatial Mapping")
+        glutCreateWindow(b"viewer [generate_mesh_from_svo]")
         glViewport(0, 0, int(width), int(height))
 
         glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE,
@@ -422,12 +422,12 @@ class GLViewer:
     def print_text(self):
         if self.available:
             # Display keyboard action
-            if self.mapping_state == sl.SPATIAL_MAPPING_STATE.NOT_ENABLED:
-                glColor3f(0.15, 0.15, 0.15)
-                self.print_GL(-0.99, 0.9, "Hit Space Bar to activate Spatial Mapping.")
-            else:
-                glColor3f(0.25, 0.25, 0.25)
-                self.print_GL(-0.99, 0.9, "Hit Space Bar to stop spatial mapping.")
+            # if self.mapping_state == sl.SPATIAL_MAPPING_STATE.NOT_ENABLED:
+            #     glColor3f(0.15, 0.15, 0.15)
+            #     self.print_GL(-0.99, 0.9, "Hit Space Bar to activate Spatial Mapping.")
+            # else:
+            #     glColor3f(0.25, 0.25, 0.25)
+            #     self.print_GL(-0.99, 0.9, "Hit Space Bar to stop spatial mapping.")
 
             positional_tracking_state_str = "POSITIONAL TRACKING STATE : "
             spatial_mapping_state_str = "SPATIAL MAPPING STATE : "
@@ -449,7 +449,7 @@ class GLViewer:
                 else:
                     glColor3f(0.55, 0.65, 0.55)
                     state_str = spatial_mapping_state_str + str(sl.SPATIAL_MAPPING_STATE.NOT_ENABLED)
-            self.print_GL(-0.99, 0.83, state_str)
+            self.print_GL(-0.99, 0.9, state_str)
 
 class SubMapObj:
     def __init__(self):

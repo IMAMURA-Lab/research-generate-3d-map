@@ -1,4 +1,4 @@
-# SVOファイル作成用プログラム
+# SVOファイル作成用スクリプト
 # プログラム停止のコマンドをCtrl-CかEscか検討中
 
 import csv  # CSVファイル読み書き用モジュール（標準ライブラリ）
@@ -102,7 +102,7 @@ def main():
     image = sl.Mat()
 
     # OpenCVウィンドウを作成
-    window_name = "Viewer [camera_capture]"
+    window_name = "Viewer [generate_svo]"
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)  # ウィンドウ名
     cv2.resizeWindow(window_name, 1000, 800)  # 初期サイズ
 
@@ -142,7 +142,7 @@ def main():
     # -----------------------------------------------------------------------
     # ここでは "imu_data.csv" を新規に作って IMU（加速度・角速度）の値を保存する
     # ※推奨：with open(...) as imu_csv_file: を使うと例外発生時も自動でクローズされ安全です
-    imu_csv_file = open("imu_data.csv", mode="w", newline="")
+    imu_csv_file = open("..\Materials\imu_data.csv", mode="w", newline="")
     csv_writer = csv.writer(imu_csv_file)
     # CSV ヘッダ行（見出し）を書き込む
     csv_writer.writerow(["Frame", "Timestamp (ms)", "Accel X", "Accel Y", "Accel Z", "Gyro X", "Gyro Y", "Gyro Z"])
