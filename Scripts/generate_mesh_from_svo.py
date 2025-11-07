@@ -161,7 +161,7 @@ def main():
             print("Save texture set to : {}".format(spatial_mapping_params.save_texture))
             pymesh.apply_texture(sl.MESH_TEXTURE_FORMAT.RGBA)
 
-        filepath = "..\Materials\mesh_gen.obj"
+        filepath = "..\Materials\mesh_sample.obj"
         status = pymesh.save(filepath)
         if status:
             print("Mesh saved under " + filepath)

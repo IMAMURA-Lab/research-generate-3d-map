@@ -142,7 +142,7 @@ def main():
     # -----------------------------------------------------------------------
     # ここでは "imu_data.csv" を新規に作って IMU（加速度・角速度）の値を保存する
     # ※推奨：with open(...) as imu_csv_file: を使うと例外発生時も自動でクローズされ安全です
-    imu_csv_file = open("..\Materials\imu_data.csv", mode="w", newline="")
+    imu_csv_file = open("..\Materials\imu_data_sample.csv", mode="w", newline="")
     csv_writer = csv.writer(imu_csv_file)
     # CSV ヘッダ行（見出し）を書き込む
     csv_writer.writerow(["Frame", "Timestamp (ms)", "Accel X", "Accel Y", "Accel Z", "Gyro X", "Gyro Y", "Gyro Z"])
