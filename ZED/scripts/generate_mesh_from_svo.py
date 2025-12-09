@@ -16,7 +16,7 @@ def main():
     # --- 初期化パラメータの設定 ---
     init_params = sl.InitParameters()
     parse_args(init_params)
-    init_params.svo_real_time_mode = False # SVO 再生の実時間モード（True ならSVOのタイムスタンプに従って再生、False ならできるだけ早く再生）
+    # init_params.svo_real_time_mode = True # SVO 再生の実時間モード（True ならSVOのタイムスタンプに従って再生、False ならできるだけ早く再生）
     init_params.depth_mode = sl.DEPTH_MODE.NEURAL
     init_params.coordinate_units = sl.UNIT.METER # 単位（メートル）を指定
     init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP # 座標系の選択
@@ -101,11 +101,28 @@ def main():
 
     Exit = False # SVOの終端に到達したかどうかのフラグ
 
+    pre_timestamp = None # 前フレームのタイムスタンプ（ms）
+
+    speed = opt.speed # SVO再生速度調整用パラメータ
+
     # メインループ
     while viewer.is_available():
+
         grab_svo = zed.grab(runtime_params)
         if grab_svo == sl.ERROR_CODE.SUCCESS:
+
             zed.retrieve_image(image, sl.VIEW.LEFT)
+
+            # SVO再生速度調整
+            timestamp = zed.get_timestamp(sl.TIME_REFERENCE.CURRENT) # 現在のフレームのタイムスタンプを取得
+            ms_timestamp = timestamp.get_milliseconds() # タイムスタンプをミリ秒単位で取得
+            if pre_timestamp is not None:
+                delta = ms_timestamp - pre_timestamp
+                wait_time = (delta / 1000.0) / speed
+                if delta > 0:
+                    time.sleep(wait_time)
+            pre_timestamp = ms_timestamp
+
             tracking_state = zed.get_position(pose)
             mapping_state = zed.get_spatial_mapping_state()
             duration = time.time() - last_call
@@ -177,6 +194,7 @@ if __name__ == "__main__":
     parser.add_argument('--input_svo_file', default= "svo_sample.svo2")
     parser.add_argument('--mesh_dir', default= "samples")
     parser.add_argument('--output_mesh_file', default= "mesh_sample.obj")
+    parser.add_argument('--speed', type=float, default=1.0)
     opt = parser.parse_args()
     main()
 
