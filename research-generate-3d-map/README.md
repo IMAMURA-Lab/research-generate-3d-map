@@ -1,1 +1,0 @@
-# research-generate-3d-map
