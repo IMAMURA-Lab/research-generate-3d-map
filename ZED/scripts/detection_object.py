@@ -17,31 +17,38 @@ def main():
     train = args.train
 
     # -----------------------------
-    # 設定
+    # YOLOv8モデル設定
     # -----------------------------
     MODEL_PATH = f"..\..\..\ZED\label_studio_project\work\{model_name}/run/runs/detect/{train}\weights/best.pt"  # 学習済みモデルパス
     CONF_THRESH = 0.4
-    TARGET_CLASS_NAME = "tape"
-
-    # -----------------------------
-    # YOLOv8 モデルロード
-    # -----------------------------
+    TARGET_CLASS_NAMES = ["fire", "person"]  # 検出対象クラス名のリスト
     model = YOLO(MODEL_PATH)
+
+    # ----------------------------------------
+    # クラスごとに色を定義（任意に追加）
+    # ----------------------------------------
+    CLASS_COLORS = {
+        "fire": (0, 0, 255),         # 赤
+        "person": (255, 255, 0)      # 黄色
+}
 
     # -----------------------------
     # ZED 初期化
     # -----------------------------
     zed = sl.Camera()
-    init_params = sl.InitParameters(camera_resolution=sl.RESOLUTION.HD720, depth_mode=sl.DEPTH_MODE.PERFORMANCE)
-
-    if zed.open(init_params) != sl.ERROR_CODE.SUCCESS:
-        print("ZED の初期化に失敗しました")
+    init_params = sl.InitParameters()
+    init_params.camera_resolution = sl.RESOLUTION.HD720
+    init_params.depth_mode = sl.DEPTH_MODE.NEURAL
+    status = zed.open(init_params)
+    
+    if status != sl.ERROR_CODE.SUCCESS:
+        print("Camera Open : " + repr(status) + ". Exit program.")
         exit(1)
 
     runtime_params = sl.RuntimeParameters()
 
-    image_zed = sl.Mat()
-    point_cloud = sl.Mat()
+    image = sl.Mat()
+    point_cloud_zed = sl.Mat()
 
     while True:
 
@@ -49,15 +56,21 @@ def main():
         if zed.grab(runtime_params) != sl.ERROR_CODE.SUCCESS:
             continue
 
-        zed.retrieve_image(image_zed, sl.VIEW.LEFT)
-        zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
+        zed.retrieve_image(image, sl.VIEW.LEFT)
+        zed.retrieve_measure(point_cloud_zed, sl.MEASURE.XYZRGBA)
 
-        frame = image_zed.get_data()[:, :, :3].copy()
+        # ZED の Mat を OpenCV 形式に変換（# NumPy 配列として取得）
+        image_ocv = np.array(image.get_data(), dtype=np.uint8, copy=True)
+
+        if image_ocv is None:
+            print("Failed to convert image to numpy array")
+            continue
 
         # -----------------------------
         # YOLOv8 推論
         # -----------------------------
-        results = model.predict(frame, conf=CONF_THRESH, verbose=False)
+        results = model.predict(image_ocv, conf=CONF_THRESH, verbose=False)
+        names = results[0].names
 
         for r in results:
             for box in r.boxes:
@@ -69,7 +82,7 @@ def main():
                 cls_id = int(box.cls[0])
                 class_name = r.names[cls_id]
 
-                if class_name != TARGET_CLASS_NAME:
+                if class_name not in TARGET_CLASS_NAMES:
                     continue
 
                 # 信頼度
@@ -82,7 +95,7 @@ def main():
                 # -----------------------------
                 # 深度取得
                 # -----------------------------
-                err, point = point_cloud.get_value(cx, cy)
+                err, point = point_cloud_zed.get_value(cx, cy)
                 if err != sl.ERROR_CODE.SUCCESS:
                     continue
 
@@ -93,12 +106,12 @@ def main():
                 # -----------------------------
                 # 描画
                 # -----------------------------
-                cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
+                cv2.rectangle(image_ocv, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
                 label = f"{class_name} {conf:.2f}  dist:{distance:.2f}m"
-                cv2.putText(frame, label, (xmin, ymin - 10),
+                cv2.putText(image_ocv, label, (xmin, ymin - 10),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-        cv2.imshow("Viewew [detection_object]", frame)
+        cv2.imshow("Viewew [detection_object]", image_ocv)
 
         if cv2.waitKey(1) == 27:  # ESC キー
             break
