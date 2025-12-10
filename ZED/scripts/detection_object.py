@@ -30,7 +30,7 @@ def main():
     CLASS_COLORS = {
         "fire": (0, 0, 255),         # 赤
         "person": (255, 255, 0)      # 黄色
-}
+    }
 
     # -----------------------------
     # ZED 初期化
@@ -48,7 +48,7 @@ def main():
     runtime_params = sl.RuntimeParameters()
 
     image = sl.Mat()
-    point_cloud_zed = sl.Mat()
+    point_cloud = sl.Mat()
 
     while True:
 
@@ -57,7 +57,7 @@ def main():
             continue
 
         zed.retrieve_image(image, sl.VIEW.LEFT)
-        zed.retrieve_measure(point_cloud_zed, sl.MEASURE.XYZRGBA)
+        zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
 
         # ZED の Mat を OpenCV 形式に変換（# NumPy 配列として取得）
         image_ocv = np.array(image.get_data(), dtype=np.uint8, copy=True)
@@ -70,7 +70,6 @@ def main():
         # YOLOv8 推論
         # -----------------------------
         results = model.predict(image_ocv, conf=CONF_THRESH, verbose=False)
-        names = results[0].names
 
         for r in results:
             for box in r.boxes:
@@ -95,7 +94,7 @@ def main():
                 # -----------------------------
                 # 深度取得
                 # -----------------------------
-                err, point = point_cloud_zed.get_value(cx, cy)
+                err, point = point_cloud.get_value(cx, cy)
                 if err != sl.ERROR_CODE.SUCCESS:
                     continue
 
@@ -106,10 +105,13 @@ def main():
                 # -----------------------------
                 # 描画
                 # -----------------------------
-                cv2.rectangle(image_ocv, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
+
+                color = CLASS_COLORS.get(class_name, (255, 255, 255))  # デフォルトは白
+
+                cv2.rectangle(image_ocv, (xmin, ymin), (xmax, ymax), color, 1)
                 label = f"{class_name} {conf:.2f}  dist:{distance:.2f}m"
                 cv2.putText(image_ocv, label, (xmin, ymin - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 1)
 
         cv2.imshow("Viewew [detection_object]", image_ocv)
 
