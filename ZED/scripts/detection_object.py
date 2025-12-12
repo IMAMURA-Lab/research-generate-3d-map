@@ -1,5 +1,10 @@
 # 物体検出を行うスクリプト
-# 独自学習モデル用に未変更
+# 独自学習モデル用に変更済み
+# より精密な深度計算を検討中
+# 物体を検出した際に、どの段階で座標を登録するのかを検討中
+# →今のところは、三秒間検出した時点で登録で検討中
+# →1つのモデルに対して、一回までしか登録が出来ないのが問題点
+# →物体検出の信頼度を活用する事も検討中
 
 import cv2
 import numpy as np
@@ -61,6 +66,7 @@ def main():
 
         # ZED の Mat を OpenCV 形式に変換（# NumPy 配列として取得）
         image_ocv = np.array(image.get_data(), dtype=np.uint8, copy=True)
+        image_ocv = cv2.cvtColor(image_ocv, cv2.COLOR_BGRA2BGR)
 
         if image_ocv is None:
             print("Failed to convert image to numpy array")

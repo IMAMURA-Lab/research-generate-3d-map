@@ -16,7 +16,7 @@ def main():
     # --- 初期化パラメータの設定 ---
     init_params = sl.InitParameters()
     parse_args(init_params)
-    # init_params.svo_real_time_mode = True # SVO 再生の実時間モード（True ならSVOのタイムスタンプに従って再生、False ならできるだけ早く再生）
+    init_params.svo_real_time_mode = True # SVO 再生の実時間モード（True ならSVOのタイムスタンプに従って再生、False ならできるだけ早く再生）
     init_params.depth_mode = sl.DEPTH_MODE.NEURAL
     init_params.coordinate_units = sl.UNIT.METER # 単位（メートル）を指定
     init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP # 座標系の選択
@@ -114,14 +114,14 @@ def main():
             zed.retrieve_image(image, sl.VIEW.LEFT)
 
             # SVO再生速度調整
-            timestamp = zed.get_timestamp(sl.TIME_REFERENCE.CURRENT) # 現在のフレームのタイムスタンプを取得
-            ms_timestamp = timestamp.get_milliseconds() # タイムスタンプをミリ秒単位で取得
-            if pre_timestamp is not None:
-                delta = ms_timestamp - pre_timestamp
-                wait_time = (delta / 1000.0) / speed
-                if delta > 0:
-                    time.sleep(wait_time)
-            pre_timestamp = ms_timestamp
+            # timestamp = zed.get_timestamp(sl.TIME_REFERENCE.CURRENT) # 現在のフレームのタイムスタンプを取得
+            # ms_timestamp = timestamp.get_milliseconds() # タイムスタンプをミリ秒単位で取得
+            # if pre_timestamp is not None:
+            #     delta = ms_timestamp - pre_timestamp
+            #     wait_time = (delta / 1000.0) / speed
+            #     if delta > 0:
+            #         time.sleep(wait_time)
+            # pre_timestamp = ms_timestamp
 
             tracking_state = zed.get_position(pose)
             mapping_state = zed.get_spatial_mapping_state()
@@ -136,8 +136,8 @@ def main():
 
         elif grab_svo == sl.ERROR_CODE.END_OF_SVOFILE_REACHED:
             Exit = True
-            # print("End of SVO reached. Exiting loop.")
-            # break
+            print("End of SVO reached. Exiting loop.")
+            break
 
         if keyboard.is_pressed('esc'):
             print("Exiting loop(esc pressed).")
@@ -148,25 +148,25 @@ def main():
     # 結果抽出
     zed.extract_whole_spatial_map(pymesh)
 
-    if Exit:
-        # メッシュフィルタリング
-        filter_params = sl.MeshFilterParameters()
-        filter_params.set(sl.MESH_FILTER.MEDIUM)
-        pymesh.filter(filter_params, True)
+    # if Exit:
+    # メッシュフィルタリング
+    filter_params = sl.MeshFilterParameters()
+    filter_params.set(sl.MESH_FILTER.MEDIUM)
+    pymesh.filter(filter_params, True)
 
-        if spatial_mapping_params.save_texture:
-            print("Save texture set to : {}".format(spatial_mapping_params.save_texture))
-            pymesh.apply_texture(sl.MESH_TEXTURE_FORMAT.RGBA)
+    if spatial_mapping_params.save_texture:
+        print("Save texture set to : {}".format(spatial_mapping_params.save_texture))
+        pymesh.apply_texture(sl.MESH_TEXTURE_FORMAT.RGBA)
 
-        mesh_dir = opt.mesh_dir
-        output_mesh_file = opt.output_mesh_file 
-        mesh_path = f"..\..\..\ZED\{mesh_dir}\mesh\{output_mesh_file}"
-        
-        status = pymesh.save(mesh_path)
-        if status:
-            print("Mesh saved under " + mesh_path)
-        else:
-            print("Failed to save the mesh under " + mesh_path)
+    mesh_dir = opt.mesh_dir
+    output_mesh_file = opt.output_mesh_file 
+    mesh_path = f"..\..\..\ZED\{mesh_dir}\mesh\{output_mesh_file}"
+    
+    status = pymesh.save(mesh_path)
+    if status:
+        print("Mesh saved under " + mesh_path)
+    else:
+        print("Failed to save the mesh under " + mesh_path)
 
     mapping_state = sl.SPATIAL_MAPPING_STATE.NOT_ENABLED
 
