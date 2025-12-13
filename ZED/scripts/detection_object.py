@@ -60,74 +60,86 @@ def main():
     image = sl.Mat()
     point_cloud = sl.Mat()
 
-    while True:
+    running = True # プログラム実行フラグ
+    ZED_running = False # ZEDカメラ動作フラグ
 
-        # フレーム取得
-        if zed.grab(runtime_params) != sl.ERROR_CODE.SUCCESS:
-            continue
+    while running:
 
-        zed.retrieve_image(image, sl.VIEW.LEFT)
-        zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
+        # スペースキー入力で開始
+        print("Press 'SPACE' to start", end="\r") # 同じ行に上書き表示
+        if cv2.waitKey(1) == 32:
+            ZED_running = True
 
-        # ZED の Mat を OpenCV 形式に変換（# NumPy 配列として取得）
-        image_ocv = np.array(image.get_data(), dtype=np.uint8, copy=True)
-        image_ocv = cv2.cvtColor(image_ocv, cv2.COLOR_BGRA2BGR)
+        while ZED_running:
 
-        if image_ocv is None:
-            print("Failed to convert image to numpy array")
-            continue
+            # フレーム取得
+            if zed.grab(runtime_params) != sl.ERROR_CODE.SUCCESS:
+                continue
 
-        # -----------------------------
-        # YOLOv8 推論
-        # -----------------------------
-        results = model.predict(image_ocv, conf=CONF_THRESH, verbose=False)
+            zed.retrieve_image(image, sl.VIEW.LEFT)
+            zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
 
-        for r in results:
-            for box in r.boxes:
+            # ZED の Mat を OpenCV 形式に変換（# NumPy 配列として取得）
+            image_ocv = np.array(image.get_data(), dtype=np.uint8, copy=True)
+            image_ocv = cv2.cvtColor(image_ocv, cv2.COLOR_BGRA2BGR)
 
-                # バウンディングボックス
-                xmin, ymin, xmax, ymax = map(int, box.xyxy[0])
+            if image_ocv is None:
+                print("Failed to convert image to numpy array")
+                continue
 
-                # クラス名
-                cls_id = int(box.cls[0])
-                class_name = r.names[cls_id]
+            # -----------------------------
+            # YOLOv8 推論
+            # -----------------------------
+            results = model.predict(image_ocv, conf=CONF_THRESH, verbose=False)
 
-                if class_name not in TARGET_CLASS_NAMES:
-                    continue
+            for r in results:
+                for box in r.boxes:
 
-                # 信頼度
-                conf = float(box.conf[0])
+                    # バウンディングボックス
+                    xmin, ymin, xmax, ymax = map(int, box.xyxy[0])
 
-                # 中心座標
-                cx = int((xmin + xmax) / 2)
-                cy = int((ymin + ymax) / 2)
+                    # クラス名
+                    cls_id = int(box.cls[0])
+                    class_name = r.names[cls_id]
 
-                # -----------------------------
-                # 深度取得
-                # -----------------------------
-                err, point = point_cloud.get_value(cx, cy)
-                if err != sl.ERROR_CODE.SUCCESS:
-                    continue
+                    if class_name not in TARGET_CLASS_NAMES:
+                        continue
 
-                X, Y, Z, _ = point
+                    # 信頼度
+                    conf = float(box.conf[0])
 
-                distance = np.sqrt(X*X + Y*Y + Z*Z)
+                    # 中心座標
+                    cx = int((xmin + xmax) / 2)
+                    cy = int((ymin + ymax) / 2)
 
-                # -----------------------------
-                # 描画
-                # -----------------------------
+                    # -----------------------------
+                    # 深度取得
+                    # -----------------------------
+                    err, point = point_cloud.get_value(cx, cy)
+                    if err != sl.ERROR_CODE.SUCCESS:
+                        continue
 
-                color = CLASS_COLORS.get(class_name, (255, 255, 255))  # デフォルトは白
+                    X, Y, Z, _ = point
 
-                cv2.rectangle(image_ocv, (xmin, ymin), (xmax, ymax), color, 1)
-                label = f"{class_name} {conf:.2f}  dist:{distance:.2f}m"
-                cv2.putText(image_ocv, label, (xmin, ymin - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 1)
+                    distance = np.sqrt(X*X + Y*Y + Z*Z)
 
-        cv2.imshow("Viewew [detection_object]", image_ocv)
+                    # -----------------------------
+                    # 描画
+                    # -----------------------------
 
-        if cv2.waitKey(1) == 27:  # ESC キー
-            break
+                    color = CLASS_COLORS.get(class_name, (255, 255, 255))  # デフォルトは白
+
+                    cv2.rectangle(image_ocv, (xmin, ymin), (xmax, ymax), color, 1)
+                    label = f"{class_name} {conf:.2f}  dist:{distance:.2f}m"
+                    cv2.putText(image_ocv, label, (xmin, ymin - 10),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 1)
+
+            cv2.imshow("Viewew [detection_object]", image_ocv)
+
+            # ESCキーで終了
+            if cv2.waitKey(1) == 27:
+                ZED_running = False
+                running = False
 
     zed.close()
     cv2.destroyAllWindows()

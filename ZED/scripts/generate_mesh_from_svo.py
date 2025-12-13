@@ -116,47 +116,59 @@ def main():
     frame_count = 0  # 処理したフレーム数カウンタ
     frame_step = opt.frame_step # 処理するフレームの間隔
 
-    # メインループ
-    while viewer.is_available():
+    running = True # プログラム実行フラグ
+    ZED_running = False # ZEDカメラ動作フラグ
 
-        grab_svo = zed.grab(runtime_params)
-        if grab_svo == sl.ERROR_CODE.SUCCESS:
+    while running:
 
-            frame_count += 1
-            if frame_count % frame_step != 0:
-                continue  # 指定されたフレーム間隔で処理をスキップ
+        # スペースキー入力で開始
+        print("Press 'SPACE' to start", end="\r") # 同じ行に上書き表示
+        if keyboard.is_pressed('space'):
+            ZED_running = True
 
-            zed.retrieve_image(image, sl.VIEW.LEFT)
+        # メインループ
+        while viewer.is_available() and ZED_running:
 
-            # # SVO再生速度調整
-            # timestamp = zed.get_timestamp(sl.TIME_REFERENCE.CURRENT) # 現在のフレームのタイムスタンプを取得
-            # ms_timestamp = timestamp.get_milliseconds() # タイムスタンプをミリ秒単位で取得
-            # if pre_timestamp is not None:
-            #     delta = ms_timestamp - pre_timestamp
-            #     wait_time = (delta / 1000.0) / speed
-            #     if delta > 0:
-            #         time.sleep(wait_time)
-            # pre_timestamp = ms_timestamp
+            grab_svo = zed.grab(runtime_params)
+            if grab_svo == sl.ERROR_CODE.SUCCESS:
 
-            tracking_state = zed.get_position(pose)
-            mapping_state = zed.get_spatial_mapping_state()
-            duration = time.time() - last_call
-            if duration > .5 and viewer.chunks_updated():
-                zed.request_spatial_map_async()
-                last_call = time.time()
-            if zed.get_spatial_map_request_status_async() == sl.ERROR_CODE.SUCCESS:
-                zed.retrieve_spatial_map_async(pymesh)
-                viewer.update_chunks()
-            change_state = viewer.update_view(image, pose.pose_data(), tracking_state, mapping_state)
+                frame_count += 1
+                if frame_count % frame_step != 0:
+                    continue  # 指定されたフレーム間隔で処理をスキップ
 
-        elif grab_svo == sl.ERROR_CODE.END_OF_SVOFILE_REACHED:
-            Exit = True
-            print("End of SVO reached. Exiting loop.")
-            break
+                zed.retrieve_image(image, sl.VIEW.LEFT)
 
-        if keyboard.is_pressed('esc'):
-            print("Exiting loop(esc pressed).")
-            break
+                # # SVO再生速度調整
+                # timestamp = zed.get_timestamp(sl.TIME_REFERENCE.CURRENT) # 現在のフレームのタイムスタンプを取得
+                # ms_timestamp = timestamp.get_milliseconds() # タイムスタンプをミリ秒単位で取得
+                # if pre_timestamp is not None:
+                #     delta = ms_timestamp - pre_timestamp
+                #     wait_time = (delta / 1000.0) / speed
+                #     if delta > 0:
+                #         time.sleep(wait_time)
+                # pre_timestamp = ms_timestamp
+
+                tracking_state = zed.get_position(pose)
+                mapping_state = zed.get_spatial_mapping_state()
+                duration = time.time() - last_call
+                if duration > .5 and viewer.chunks_updated():
+                    zed.request_spatial_map_async()
+                    last_call = time.time()
+                if zed.get_spatial_map_request_status_async() == sl.ERROR_CODE.SUCCESS:
+                    zed.retrieve_spatial_map_async(pymesh)
+                    viewer.update_chunks()
+                change_state = viewer.update_view(image, pose.pose_data(), tracking_state, mapping_state)
+
+            elif grab_svo == sl.ERROR_CODE.END_OF_SVOFILE_REACHED:
+                Exit = True
+                print("End of SVO reached. Exiting loop.")
+                ZED_running = False
+                running = False
+
+            if keyboard.is_pressed('esc'):
+                print("Exiting loop(esc pressed).")
+                ZED_running = False
+                running = False
 
     viewer.clear_current_mesh()   
 
