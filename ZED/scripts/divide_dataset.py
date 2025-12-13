@@ -1,7 +1,7 @@
 # データセットを学習用と検証用に分割するスクリプト
 # 実行例
 # python divide_dataset.py
-# --model_name : 分割対象のモデル名（データセットの元フォルダ名）
+# --model_name: 学習モデル名（label_studio_project/work/以下のフォルダ名）
 # --val-ratio : 評価用データの割合（デフォルト 0.2）
 # --seed : 乱数シード（デフォルト 42）
 # --mode : copy または move（デフォルト move）

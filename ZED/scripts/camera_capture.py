@@ -2,6 +2,7 @@
 # 実行例
 # python camera_capture.py
 # --output_svo_file : 出力するSVOファイル名（デフォルト：svo_sample.svo2）
+
 # ビューワなし
 # 処理を軽くできるよう調整中
 

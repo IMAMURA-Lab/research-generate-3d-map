@@ -3,6 +3,7 @@
 # python detection_object.py
 # --model_name: 学習モデル名（label_studio_project/work/以下のフォルダ名）
 # --train: 学習モデルが入っているフォルダ名（run/runs/detect/以下のフォルダ名、例：train1）
+
 # 独自学習モデル用に変更済み
 # より精密な深度計算を検討中
 # 物体を検出した際に、どの段階で座標を登録するのかを検討中

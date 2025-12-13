@@ -1,8 +1,8 @@
 # 画像を生成するスクリプト（ZEDカメラからRGB画像と深度マップを取得し保存する）
 # 実行例
 # python generate_image.py --class_name your_class_name --res 720
-# --class_name: 保存先ディレクトリ名（クラス名）
-# --res: 解像度（720または1080、デフォルト　720）
+# --class_name: クラス名（label_studio_project/data/classes/以下のフォルダ名）
+# --res: 解像度（720または1080、デフォルト 720）
 
 import os
 import time

@@ -1,7 +1,7 @@
 # 作成したデータセットの画像とラベルが対応しているか確認するスクリプト
 # 実行例
 # python check_dataset.py
-# --model_name : 確認したいモデル名を指定
+# --model_name: 学習モデル名（label_studio_project/work/以下のフォルダ名）
 
 import os
 import argparse
