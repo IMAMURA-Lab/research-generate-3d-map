@@ -124,6 +124,7 @@ def main():
         # スペースキー入力で開始
         print("Press 'SPACE' to start", end="\r") # 同じ行に上書き表示
         if keyboard.is_pressed('space'):
+            print("Start to program(space key pressed).")
             ZED_running = True
 
         # メインループ
@@ -166,7 +167,7 @@ def main():
                 running = False
 
             if keyboard.is_pressed('esc'):
-                print("Exiting loop(esc pressed).")
+                print("Exiting loop(esc key pressed).")
                 ZED_running = False
                 running = False
 
