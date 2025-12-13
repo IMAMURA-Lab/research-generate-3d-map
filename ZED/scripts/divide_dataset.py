@@ -1,35 +1,10 @@
 # データセットを学習用と検証用に分割するスクリプト
-#
-# 概要:
-#  - src フォルダの下にある images/ と labels/ を読み取り、
-#    画像ファイル（.jpg/.png/.jpeg）と対応するラベルファイル（同名の .txt）が揃っているペアを集めます。
-#  - 指定した割合で train と val に分割し、dst に images/train, images/val, labels/train, labels/val を作成して
-#    各ファイルをコピーまたは移動（--mode=copy|move）します。
-#
-# 想定するディレクトリ構成（src）:
-#  src/
-#    images/
-#      img1.jpg
-#      img2.jpg
-#    labels/
-#      img1.txt
-#      img2.txt
-#
-# 出力（dst）:
-#  dst/
-#    images/train/
-#    images/val/
-#    labels/train/
-#    labels/val/
-#
-# 注意点:
-#  - 画像とラベルはファイル名の stem（拡張子を除いた部分）で対応させます。img.jpg に対して img.txt が必要です。
-#  - ラベルが無い画像は警告を出してスキップします。
-#  - 1枚しかないデータセットでは val に 0 または 1 を割り当てる処理が工夫されています（下記実装参照）。
-#  - collect_pairs では拡張子を指定していますが、必要なら追加してください。
-#
-# 使い方の例:
-#  python split_dataset_commented.py --src /path/to/src --dst /path/to/dst --val-ratio 0.2 --seed 42 --mode copy
+# 実行例
+# python divide_dataset.py
+# --model_name : 分割対象のモデル名（データセットの元フォルダ名）
+# --val-ratio : 評価用データの割合（デフォルト 0.2）
+# --seed : 乱数シード（デフォルト 42）
+# --mode : copy または move（デフォルト move）
 
 import argparse
 import os
@@ -105,10 +80,6 @@ def perform(pairs, dst, set_name, mode="move"):
 
 def main():
     parser = argparse.ArgumentParser()
-    # 引数の定義:
-    # --val-ratio : 検証用データの割合（デフォルト 0.2）
-    # --seed : 乱数シード（デフォルト 42）
-    # --mode : copy または move（デフォルト copy）
     parser.add_argument("--model_name", required=True)
     parser.add_argument("--val-ratio", type=float, default=0.2)
     parser.add_argument("--seed", type=int, default=42)

@@ -1,4 +1,7 @@
 # HEIC形式の画像をPNG形式に変換するスクリプト
+# 実行例
+# python convert_heic_to_png.py
+# --class_name: 変換したいクラス名を指定
 
 from pathlib import Path
 from PIL import Image

@@ -3,6 +3,16 @@
 # 処理を軽くできるよう調整中
 # メッシュのテクスチャが最後まで保存できない不具合あり
 # SVOの再生速度を調整する方法を検討中
+# →処理するフレーム数を減らす
+
+# 実行例
+# python generate_mesh_from_svo.py
+# --svo_dir: SVOファイルが保存されているディレクトリ（デフォルト: samples）
+# --input_svo_file: 入力SVOファイル名（デフォルト: svo_sample.svo2）
+# --mesh_dir: 生成されたメッシュファイルを保存するディレクトリ（デフォルト: samples）
+# --output_mesh_file: 出力メッシュファイル名（デフォルト: mesh_sample.obj）
+# --speed: SVO再生速度の調整パラメータ（デフォルト: 1.0）
+# --frame_step: 処理するフレームの間隔（デフォルト: 1、例: 2なら1フレームおきに処理）
 
 import sys
 import time
@@ -16,8 +26,8 @@ def main():
     # --- 初期化パラメータの設定 ---
     init_params = sl.InitParameters()
     parse_args(init_params)
-    init_params.svo_real_time_mode = True # SVO 再生の実時間モード（True ならSVOのタイムスタンプに従って再生、False ならできるだけ早く再生）
-    init_params.depth_mode = sl.DEPTH_MODE.NEURAL
+    # init_params.svo_real_time_mode = True # SVO 再生の実時間モード（True ならSVOのタイムスタンプに従って再生、False ならできるだけ早く再生）
+    init_params.depth_mode = sl.DEPTH_MODE.NEURAL # 深度モードの設定
     init_params.coordinate_units = sl.UNIT.METER # 単位（メートル）を指定
     init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP # 座標系の選択
     init_params.depth_maximum_distance = 8.0 # 深度（距離）を何メートルまで有効とするか（max distance）
@@ -26,7 +36,6 @@ def main():
     zed = sl.Camera()
     status = zed.open(init_params)
 
-    # カメラが開けない場合は終了
     if status != sl.ERROR_CODE.SUCCESS:
         print("Camera Open : " + repr(status) + ". Exit program.")
         exit()
@@ -105,15 +114,22 @@ def main():
 
     speed = opt.speed # SVO再生速度調整用パラメータ
 
+    frame_count = 0  # 処理したフレーム数カウンタ
+    frame_step = opt.frame_step # 処理するフレームの間隔
+
     # メインループ
     while viewer.is_available():
 
         grab_svo = zed.grab(runtime_params)
         if grab_svo == sl.ERROR_CODE.SUCCESS:
 
+            frame_count += 1
+            if frame_count % frame_step != 0:
+                continue  # 指定されたフレーム間隔で処理をスキップ
+
             zed.retrieve_image(image, sl.VIEW.LEFT)
 
-            # SVO再生速度調整
+            # # SVO再生速度調整
             # timestamp = zed.get_timestamp(sl.TIME_REFERENCE.CURRENT) # 現在のフレームのタイムスタンプを取得
             # ms_timestamp = timestamp.get_milliseconds() # タイムスタンプをミリ秒単位で取得
             # if pre_timestamp is not None:
@@ -195,6 +211,7 @@ if __name__ == "__main__":
     parser.add_argument('--mesh_dir', default= "samples")
     parser.add_argument('--output_mesh_file', default= "mesh_sample.obj")
     parser.add_argument('--speed', type=float, default=1.0)
+    parser.add_argument('--frame_step', type=int, default=1)
     opt = parser.parse_args()
     main()
 

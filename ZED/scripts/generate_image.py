@@ -1,6 +1,8 @@
 # 画像を生成するスクリプト（ZEDカメラからRGB画像と深度マップを取得し保存する）
-#  - 実行例: python capture_zed.py --output ./output --res 720
-#  - 出力: RGB png, 深度の .npy（32bit float）, 深度可視化用 PNG（8bit 正規化）
+# 実行例
+# python generate_image.py --class_name your_class_name --res 720
+# --class_name: 保存先ディレクトリ名（クラス名）
+# --res: 解像度（720または1080、デフォルト　720）
 
 import os
 import time
@@ -205,7 +207,6 @@ def run_capture(args):
 
 def main(): 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", type=str, default="output", help="Output folder")
     parser.add_argument("--res", type=int, default=720, choices=[720, 1080], help="Resolution: 720 or 1080")
     parser.add_argument("--class_name",required=True)
     args = parser.parse_args()
