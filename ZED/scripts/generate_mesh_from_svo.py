@@ -1,10 +1,4 @@
 # SVOファイルまたはSVO2ファイルからメッシュを生成するスクリプト
-# 基本的な空間マッピング機能は動作確認済み
-# 処理を軽くできるよう調整中
-# メッシュのテクスチャが最後まで保存できない不具合あり
-# SVOの再生速度を調整する方法を検討中
-# →処理するフレーム数を減らす
-
 # 実行例
 # python generate_mesh_from_svo.py
 # --svo_dir: SVOファイルが保存されているディレクトリ（デフォルト: samples）
@@ -13,6 +7,12 @@
 # --output_mesh_file: 出力メッシュファイル名（デフォルト: mesh_sample.obj）
 # --speed: SVO再生速度の調整パラメータ（デフォルト: 1.0）
 # --frame_step: 処理するフレームの間隔（デフォルト: 1、例: 2なら1フレームおきに処理）
+
+# 基本的な空間マッピング機能は動作確認済み
+# 処理を軽くできるよう調整中
+# メッシュのテクスチャが最後まで保存できない不具合あり
+# SVOの再生速度を調整する方法を検討中
+# →処理するフレーム数を減らす
 
 import sys
 import time
@@ -26,7 +26,6 @@ def main():
     # --- 初期化パラメータの設定 ---
     init_params = sl.InitParameters()
     parse_args(init_params)
-    # init_params.svo_real_time_mode = True # SVO 再生の実時間モード（True ならSVOのタイムスタンプに従って再生、False ならできるだけ早く再生）
     init_params.depth_mode = sl.DEPTH_MODE.NEURAL # 深度モードの設定
     init_params.coordinate_units = sl.UNIT.METER # 単位（メートル）を指定
     init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP # 座標系の選択
