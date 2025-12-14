@@ -45,21 +45,26 @@ def main():
         "person": (255, 255, 0) # 黄色
     }
 
-    # -----------------------------
-    # ZED 初期化
-    # -----------------------------
-    zed = sl.Camera()
+    # -----------------------------------------------------------------------
+    # 初期化パラメータの設定
+    # -----------------------------------------------------------------------
     init_params = sl.InitParameters()
     init_params.camera_resolution = sl.RESOLUTION.HD720
     init_params.depth_mode = sl.DEPTH_MODE.NEURAL
+    init_params.coordinate_units = sl.UNIT.METER # 単位（メートル）を指定
+    init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP # 座標系の選択
+
+    zed = sl.Camera() # カメラオブジェクト生成
+
+    # カメラを開く
     status = zed.open(init_params)
-    
     if status != sl.ERROR_CODE.SUCCESS:
         print("Camera Open : " + repr(status) + ". Exit program.")
         exit(1)
 
-    runtime_params = sl.RuntimeParameters()
+    runtime_params = sl.RuntimeParameters() # Grab() で使うランタイムパラメータ
 
+    # 画像・点群を格納するためのオブジェクト生成
     image = sl.Mat()
     point_cloud = sl.Mat()
 
@@ -142,6 +147,7 @@ def main():
                 ZED_running = False
                 running = False
 
+    # 解放処理
     zed.close()
     cv2.destroyAllWindows()
 

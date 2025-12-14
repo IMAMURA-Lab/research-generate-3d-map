@@ -1,11 +1,11 @@
 # SVOファイル作成用スクリプト
-# プログラム停止のコマンドをCtrl-CかEscか検討中
-# 基本的な録画機能は動作確認済み
-# 小型コンピュータを用いての動作は未確認
-
 # 実行例
 # python generate_svo.py
 # --output_svo_file: 出力SVOファイル名（デフォルト: svo_sample.svo2）
+
+# プログラム停止のコマンドをCtrl-CかEscか検討中
+# 基本的な録画機能は動作確認済み
+# 小型コンピュータを用いての動作は未確認
 
 import csv  # CSVファイル操作用
 import sys  # システム関連（exitなど）用
