@@ -23,18 +23,38 @@ import keyboard
 
 def main():
 
-    # --- 初期化パラメータの設定 ---
+    # -----------------------------
+    # 引数処理
+    # -----------------------------
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--svo_dir', default= "samples")
+    parser.add_argument('--input_svo_file', default= "svo_sample.svo2")
+    parser.add_argument('--mesh_dir', default= "samples")
+    parser.add_argument('--output_mesh_file', default= "mesh_sample.obj")
+    parser.add_argument('--speed', type=float, default=1.0)
+    parser.add_argument('--frame_step', type=int, default=1)
+    opt = parser.parse_args()
+    svo_dir = opt.svo_dir
+    input_svo_file = opt.input_svo_file
+    mesh_dir = opt.mesh_dir
+    output_mesh_file = opt.output_mesh_file
+    speed = opt.speed # SVO再生速度調整パラメータ
+    frame_step = opt.frame_step # フレーム間隔
+
+    # -----------------------------------------------------------------------
+    # 初期化パラメータの設定
+    # -----------------------------------------------------------------------
     init_params = sl.InitParameters()
-    parse_args(init_params)
+    parse_args(init_params, svo_dir, input_svo_file)
     init_params.depth_mode = sl.DEPTH_MODE.NEURAL # 深度モードの設定
     init_params.coordinate_units = sl.UNIT.METER # 単位（メートル）を指定
     init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP # 座標系の選択
     init_params.depth_maximum_distance = 8.0 # 深度（距離）を何メートルまで有効とするか（max distance）
 
-    # カメラオブジェクト生成
-    zed = sl.Camera()
-    status = zed.open(init_params)
+    zed = sl.Camera() # カメラオブジェクト生成
 
+    # カメラを開く
+    status = zed.open(init_params)
     if status != sl.ERROR_CODE.SUCCESS:
         print("Camera Open : " + repr(status) + ". Exit program.")
         exit()
@@ -43,13 +63,14 @@ def main():
     tracking_state = sl.POSITIONAL_TRACKING_STATE.OFF
     mapping_state = sl.SPATIAL_MAPPING_STATE.NOT_ENABLED
 
-    # カメラの情報（解像度、焦点距離、センサーサイズなど）を取得
-    camera_infos = zed.get_camera_information()
+    camera_infos = zed.get_camera_information() # カメラの情報を取得
 
+    # ---------------------------------------------
     # Positional Tracking の有効化
+    # ---------------------------------------------
     positional_tracking_params = sl.PositionalTrackingParameters()
     positional_tracking_params.enable_area_memory = True  # カメラ移動に応じたマップ構築を許可
-    positional_tracking_params.set_floor_as_origin = False  # 原点設定（必要ならTrue）
+    positional_tracking_params.set_floor_as_origin = False  # 原点設定
     positional_tracking_params.enable_imu_fusion = True     # IMUを統合
     err = zed.enable_positional_tracking(positional_tracking_params)
     if err != sl.ERROR_CODE.SUCCESS:
@@ -57,10 +78,11 @@ def main():
         zed.close()
         exit(1)
 
-    # 床を原点にする
-    positional_tracking_params.set_floor_as_origin = True
+    positional_tracking_params.set_floor_as_origin = True # 床を原点にする
 
-    # --- 空間マッピング（Spatial Mapping）の設定 ---
+    # ---------------------------------------------
+    # 空間マッピング（Spatial Mapping）の設定
+    # ---------------------------------------------
     spatial_mapping_params = sl.SpatialMappingParameters(
         resolution=sl.MAPPING_RESOLUTION.MEDIUM,
         mapping_range=sl.MAPPING_RANGE.MEDIUM,
@@ -111,10 +133,7 @@ def main():
 
     pre_timestamp = None # 前フレームのタイムスタンプ（ms）
 
-    speed = opt.speed # SVO再生速度調整用パラメータ
-
     frame_count = 0  # 処理したフレーム数カウンタ
-    frame_step = opt.frame_step # 処理するフレームの間隔
 
     running = True # プログラム実行フラグ
     ZED_running = False # ZEDカメラ動作フラグ
@@ -173,8 +192,7 @@ def main():
 
     viewer.clear_current_mesh()   
 
-    # 結果抽出
-    zed.extract_whole_spatial_map(pymesh)
+    zed.extract_whole_spatial_map(pymesh) # 結果抽出
 
     # if Exit:
     # メッシュフィルタリング
@@ -186,8 +204,6 @@ def main():
         print("Save texture set to : {}".format(spatial_mapping_params.save_texture))
         pymesh.apply_texture(sl.MESH_TEXTURE_FORMAT.RGBA)
 
-    mesh_dir = opt.mesh_dir
-    output_mesh_file = opt.output_mesh_file 
     mesh_path = f"..\..\..\ZED\{mesh_dir}\mesh\{output_mesh_file}"
     
     status = pymesh.save(mesh_path)
@@ -206,10 +222,8 @@ def main():
     point_cloud.free()
     zed.close()
 
-def parse_args(init_params):
+def parse_args(init_params, svo_dir, input_svo_file):
 
-    svo_dir = opt.svo_dir
-    input_svo_file = opt.input_svo_file  
     svo_path = f"..\..\..\ZED\{svo_dir}\svo\{input_svo_file}"
     
     if len(svo_path) > 0 and (svo_path.endswith(".svo") or svo_path.endswith(".svo2")):
@@ -217,13 +231,6 @@ def parse_args(init_params):
         print("[Sample] Using SVO File input: {0}".format(svo_path))
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--svo_dir', default= "samples")
-    parser.add_argument('--input_svo_file', default= "svo_sample.svo2")
-    parser.add_argument('--mesh_dir', default= "samples")
-    parser.add_argument('--output_mesh_file', default= "mesh_sample.obj")
-    parser.add_argument('--speed', type=float, default=1.0)
-    parser.add_argument('--frame_step', type=int, default=1)
-    opt = parser.parse_args()
+
     main()
 

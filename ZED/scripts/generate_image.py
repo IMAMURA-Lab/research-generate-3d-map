@@ -8,7 +8,6 @@ import os
 import time
 from datetime import datetime
 import argparse
-
 import numpy as np
 import cv2
 import pyzed.sl as sl
@@ -59,7 +58,7 @@ def save_depth(depth_np, path):
 # -----------------------------------------------------------------------------
 # キャプチャ本体
 # -----------------------------------------------------------------------------
-def run_capture(args):
+def run_capture(res, class_name):
     """
     メイン処理: ZED を起動し、キー入力で画像保存／SVO 録画を行う。
     キー:
@@ -68,9 +67,9 @@ def run_capture(args):
       - 'q' または ESC: 終了
     """
 
-    class_name = args.class_name
-
-    # 出力ディレクトリの作成
+    # ----------------------------------------
+    # パス指定
+    # ----------------------------------------
     image_dir = f"..\..\..\ZED\label_studio_project\data\classes\{class_name}\images/new"
     depth_dir = f"..\..\..\ZED\label_studio_project\data\classes\{class_name}\depths/new"
     video_dir = f"..\..\..\ZED\label_studio_project\data\classes\{class_name}\videos/new"
@@ -79,15 +78,15 @@ def run_capture(args):
     # ZED 初期化パラメータ
     # ----------------------------------------
     init = sl.InitParameters()
-    # 解像度設定（720 または 1080）
-    init.camera_resolution = sl.RESOLUTION.HD720 if args.res == 720 else sl.RESOLUTION.HD1080
+    init.camera_resolution = sl.RESOLUTION.HD720 if res == 720 else sl.RESOLUTION.HD1080 # 解像度設定（720 または 1080）
     init.depth_mode = sl.DEPTH_MODE.NEURAL
 
-    # ZED Camera オブジェクトの作成とオープン
-    zed = sl.Camera()
+    zed = sl.Camera() # カメラオブジェクト生成
+
+    # カメラを開く
     status = zed.open(init)
     if status != sl.ERROR_CODE.SUCCESS:
-        # open に失敗したらエラー表示して終了（デバイス未接続やドライバ問題が考えられる）
+        # open に失敗したらエラー表示して終了
         print("ZED open failed:", status)
         return
 
@@ -205,13 +204,20 @@ def run_capture(args):
         zed.close()
         print("ZED closed.")
 
-def main(): 
+def main():
+
+    # -----------------------------
+    # 引数処理
+    # -----------------------------
     parser = argparse.ArgumentParser()
     parser.add_argument("--res", type=int, default=720, choices=[720, 1080], help="Resolution: 720 or 1080")
     parser.add_argument("--class_name",required=True)
-    args = parser.parse_args()
+    opt = parser.parse_args()
+    res = opt.res
+    class_name = opt.class_name
 
-    run_capture(args)
+    run_capture(res, class_name)
 
 if __name__ == "__main__":
+
     main()

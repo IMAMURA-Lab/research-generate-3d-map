@@ -9,10 +9,10 @@ from pillow_heif import register_heif_opener
 import argparse
 from datetime import datetime
 
-# HEICを開けるように設定
-register_heif_opener()
+register_heif_opener() # HEICを開けるように設定
 
 def convert_heic_to_png(src_folder, dest_folder):
+
     src = Path(src_folder)
     dest = Path(dest_folder)
 
@@ -26,17 +26,23 @@ def convert_heic_to_png(src_folder, dest_folder):
 
 def main():
 
+    # -----------------------------
+    # 引数処理
+    # -----------------------------
     parser = argparse.ArgumentParser()
     parser.add_argument("--class_name", required=True)
-    args = parser.parse_args()
+    opt = parser.parse_args()
+    class_name = opt.class_name # クラス名
 
-    class_name = Path(args.class_name)
-    
+    # -----------------------------
+    # 変換元と変換先のパス指定
+    # -----------------------------
     source = f"../../../ZED/label_studio_project/data/classes/{class_name}/images/new/heic"
     output = f"../../../ZED/label_studio_project/data/classes/{class_name}/images/new"
 
     convert_heic_to_png(source, output)
 
 if __name__ == "__main__":
+
     main()
 

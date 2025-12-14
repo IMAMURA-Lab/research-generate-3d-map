@@ -18,13 +18,16 @@ from ultralytics import YOLO
 import argparse
 
 def main():
+
+    # -----------------------------
+    # 引数処理
+    # -----------------------------
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, required=True)
     parser.add_argument("--train", type=str, required=True)
-    args = parser.parse_args()
-
-    model_name = args.model_name
-    train = args.train
+    opt = parser.parse_args()
+    model_name = opt.model_name
+    train = opt.train
 
     # -----------------------------
     # YOLOv8モデル設定
@@ -38,8 +41,8 @@ def main():
     # クラスごとに色を定義（任意に追加）
     # ----------------------------------------
     CLASS_COLORS = {
-        "fire": (0, 0, 255),         # 赤
-        "person": (255, 255, 0)      # 黄色
+        "fire": (0, 0, 255), # 赤
+        "person": (255, 255, 0) # 黄色
     }
 
     # -----------------------------
@@ -70,6 +73,7 @@ def main():
         if cv2.waitKey(1) == 32:
             ZED_running = True
 
+        # メインループ
         while ZED_running:
 
             # フレーム取得
@@ -95,8 +99,7 @@ def main():
             for r in results:
                 for box in r.boxes:
 
-                    # バウンディングボックス
-                    xmin, ymin, xmax, ymax = map(int, box.xyxy[0])
+                    xmin, ymin, xmax, ymax = map(int, box.xyxy[0]) # バウンディングボックス座標
 
                     # クラス名
                     cls_id = int(box.cls[0])
@@ -126,12 +129,10 @@ def main():
                     # -----------------------------
                     # 描画
                     # -----------------------------
-
                     color = CLASS_COLORS.get(class_name, (255, 255, 255))  # デフォルトは白
-
-                    cv2.rectangle(image_ocv, (xmin, ymin), (xmax, ymax), color, 1)
+                    cv2.rectangle(image_ocv, (xmin, ymin), (xmax, ymax), color, 1) # バウンディングボックス
                     label = f"{class_name} {conf:.2f}  dist:{distance:.2f}m"
-                    cv2.putText(image_ocv, label, (xmin, ymin - 10),
+                    cv2.putText(image_ocv, label, (xmin, ymin - 10), # 物体名と距離
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 1)
 
             cv2.imshow("Viewew [detection_object]", image_ocv)
@@ -145,4 +146,5 @@ def main():
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
+
     main()

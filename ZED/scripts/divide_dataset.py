@@ -57,7 +57,7 @@ def copy_or_move(pairs, dst, mode="move"):
     for img_path, lbl_path in pairs:
         dst_img = Path(dst) / ("images/train" if "train" in dst_img_temp == img_path else "images")  # placeholder
 
-def perform(pairs, dst, set_name, mode="move"):
+def perform(pairs, dst, set_name, mode):
     # 実際にファイルをコピーまたは移動する関数
     # pairs: (画像パス, ラベルパス) のリスト
     # dst: 出力先のベースディレクトリ
@@ -79,18 +79,27 @@ def perform(pairs, dst, set_name, mode="move"):
             shutil.copy2(lbl_path, str(dst_lbl))
 
 def main():
+
+    # -----------------------------
+    # 引数処理
+    # -----------------------------
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", required=True)
     parser.add_argument("--val-ratio", type=float, default=0.2)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--mode", choices=("copy","move"), default="move")
-    args = parser.parse_args()
+    opt = parser.parse_args()
+    model_name = opt.model_name
+    val_ratio = opt.val_ratio
+    seed = opt.seed
+    mode = opt.mode
 
-    model_name = Path(args.model_name)
-
-    images_dir = f"..\..\..\ZED\label_studio_project/work/{model_name}/annotations/images" # データセット作成に使用する元画像フォルダ
-    labels_dir = f"..\..\..\ZED\label_studio_project/work/{model_name}/annotations/labels" # データセット作成に使用する元ラベルフォルダ
-    dataset_dir = f"..\..\..\ZED\label_studio_project/work/{model_name}/dataset" # 分割後のデータセット出力先フォルダ
+    # -----------------------------
+    # パス指定
+    # ----------------------------
+    images_dir = f"..\..\..\ZED\label_studio_project/work/{model_name}/annotations/images"
+    labels_dir = f"..\..\..\ZED\label_studio_project/work/{model_name}/annotations/labels"
+    dataset_dir = f"..\..\..\ZED\label_studio_project/work/{model_name}/dataset"
 
     pairs = collect_pairs(images_dir, labels_dir)
     if len(pairs) == 0:
@@ -98,12 +107,12 @@ def main():
         return
 
     # 分割処理
-    train_pairs, val_pairs = split_pairs(pairs, args.val_ratio, args.seed)
+    train_pairs, val_pairs = split_pairs(pairs, val_ratio, seed)
     print(f"Total pairs: {len(pairs)}, Train: {len(train_pairs)}, Val: {len(val_pairs)}")
 
     # train, val をそれぞれコピー/移動
-    perform(train_pairs, dataset_dir, "train", mode=args.mode)
-    perform(val_pairs, dataset_dir, "val", mode=args.mode)
+    perform(train_pairs, dataset_dir, "train", mode)
+    perform(val_pairs, dataset_dir, "val", mode)
 
     # print("Done. Counts:")
     # for p in ["images/train","images/val","labels/train","labels/val"]:
@@ -111,4 +120,5 @@ def main():
     #     print(p, len(list((dataset_dir / p).glob("*"))))
 
 if __name__ == "__main__":
+
     main()
