@@ -3,9 +3,10 @@
 # python detection_object.py
 # --model_name: 学習モデル名（label_studio_project/work/以下のフォルダ名）
 # --train: 学習モデルが入っているフォルダ名（run/runs/detect/以下のフォルダ名、例：train1）
+# --step: 深度計算をする際の計算する間隔（デフォルト 5）
 
 # 独自学習モデル用に変更済み
-# より精密な深度計算を検討中
+# より精密な深度計算に変更済み（未検証）
 # 物体を検出した際に、どの段階で座標を登録するのかを検討中
 # →今のところは、三秒間検出した時点で登録で検討中
 # →1つのモデルに対して、一回までしか登録が出来ないのが問題点
@@ -17,6 +18,40 @@ import pyzed.sl as sl
 from ultralytics import YOLO
 import argparse
 
+def distance_calculation(depth, xmax, xmin, ymax, ymin, step):
+
+    height = ymax - ymin
+    width = xmax - xmin
+
+    if width <= 0 or height <= 0:
+        return None
+    
+    samples = []
+
+    for y in range(ymin, ymax+1, step):
+        for x in range(xmin, xmax+1, step):
+
+            err, dpt = depth.get_value(x, y)
+
+            # 無効値チェック
+            if err != sl.ERROR_CODE.SUCCESS:
+                continue
+            if dpt is None:
+                continue
+            try:
+                dpt_value = float(dpt)
+            except:
+                continue
+            if dpt_value == 0.0 or np.isinf(dpt_value) or np.isnan(dpt_value):
+                continue
+
+            samples.append(dpt_value)
+
+    if len(samples) == 0:
+        return None
+    
+    return float(np.median(np.array(samples)))
+
 def main():
 
     # -----------------------------
@@ -25,9 +60,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, required=True)
     parser.add_argument("--train", type=str, required=True)
+    parser.add_argument("--step", type=int, default=5)
     opt = parser.parse_args()
     model_name = opt.model_name
     train = opt.train
+    step = opt.step
 
     # -----------------------------
     # YOLOv8モデル設定
@@ -62,11 +99,31 @@ def main():
         print("Camera Open : " + repr(status) + ". Exit program.")
         exit(1)
 
+    # トラッキングの状態変数（初期はオフ）
+    tracking_state = sl.POSITIONAL_TRACKING_STATE.OFF
+
+    # ---------------------------------------------
+    # Positional Tracking の有効化
+    # ---------------------------------------------
+    # positional_tracking_params = sl.PositionalTrackingParameters()
+    # positional_tracking_params.enable_area_memory = True  # カメラ移動に応じたマップ構築を許可
+    # positional_tracking_params.enable_imu_fusion = True     # IMUを統合
+    # positional_tracking_params.set_floor_as_origin = True  # 原点設定
+    # err = zed.enable_positional_tracking(positional_tracking_params)
+    # if err != sl.ERROR_CODE.SUCCESS:
+    #     print("Failed to enable positional tracking:", err)
+    #     zed.close()
+    #     exit(1)
+
+    # positional_tracking_params.set_floor_as_origin = True # 床を原点にする
+
     runtime_params = sl.RuntimeParameters() # Grab() で使うランタイムパラメータ
 
-    # 画像・点群を格納するためのオブジェクト生成
+    # 画像・深度・自己位置を格納するためのオブジェクト生成
     image = sl.Mat()
-    point_cloud = sl.Mat()
+    # point_cloud = sl.Mat()
+    depth = sl.Mat()
+    pose = sl.Pose()
 
     running = True # プログラム実行フラグ
     ZED_running = False # ZEDカメラ動作フラグ
@@ -85,8 +142,11 @@ def main():
             if zed.grab(runtime_params) != sl.ERROR_CODE.SUCCESS:
                 continue
 
+            # zed.get_position(pose, sl.REFERENCE_FRAME.WORLD)
+
             zed.retrieve_image(image, sl.VIEW.LEFT)
-            zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
+            # zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
+            zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
 
             # ZED の Mat を OpenCV 形式に変換（# NumPy 配列として取得）
             image_ocv = np.array(image.get_data(), dtype=np.uint8, copy=True)
@@ -102,41 +162,33 @@ def main():
             results = model.predict(image_ocv, conf=CONF_THRESH, verbose=False)
 
             for r in results:
-                for box in r.boxes:
+                for bbox in r.boxes:
 
-                    xmin, ymin, xmax, ymax = map(int, box.xyxy[0]) # バウンディングボックス座標
+                    xmin, ymin, xmax, ymax = map(int, bbox.xyxy[0]) # バウンディングボックス座標
 
                     # クラス名
-                    cls_id = int(box.cls[0])
+                    cls_id = int(bbox.cls[0])
                     class_name = r.names[cls_id]
 
                     if class_name not in TARGET_CLASS_NAMES:
                         continue
 
                     # 信頼度
-                    conf = float(box.conf[0])
+                    conf = float(bbox.conf[0])
 
-                    # 中心座標
-                    cx = int((xmin + xmax) / 2)
-                    cy = int((ymin + ymax) / 2)
-
-                    # -----------------------------
-                    # 深度取得
-                    # -----------------------------
-                    err, point = point_cloud.get_value(cx, cy)
-                    if err != sl.ERROR_CODE.SUCCESS:
-                        continue
-
-                    X, Y, Z, _ = point
-
-                    distance = np.sqrt(X*X + Y*Y + Z*Z)
+                    distance = distance_calculation(depth, xmax, xmin, ymax, ymin, step)
 
                     # -----------------------------
                     # 描画
                     # -----------------------------
                     color = CLASS_COLORS.get(class_name, (255, 255, 255))  # デフォルトは白
                     cv2.rectangle(image_ocv, (xmin, ymin), (xmax, ymax), color, 1) # バウンディングボックス
-                    label = f"{class_name} {conf:.2f}  dist:{distance:.2f}m"
+
+                    if distance is None:
+                        label = f"{class_name} {conf:.2f}  dist: error"
+                    else:
+                        label = f"{class_name} {conf:.2f}  dist:{distance:.2f}m"
+
                     cv2.putText(image_ocv, label, (xmin, ymin - 10), # 物体名と距離
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 1)
 

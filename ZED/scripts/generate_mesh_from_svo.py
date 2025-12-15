@@ -5,7 +5,6 @@
 # --input_svo_file: 入力SVOファイル名（デフォルト: svo_sample.svo2）
 # --mesh_dir: 生成されたメッシュファイルを保存するディレクトリ（デフォルト: samples）
 # --output_mesh_file: 出力メッシュファイル名（デフォルト: mesh_sample.obj）
-# --speed: SVO再生速度の調整パラメータ（デフォルト: 1.0）
 # --frame_step: 処理するフレームの間隔（デフォルト: 1、例: 2なら1フレームおきに処理）
 
 # 基本的な空間マッピング機能は動作確認済み
@@ -31,14 +30,12 @@ def main():
     parser.add_argument('--input_svo_file', default= "svo_sample.svo2")
     parser.add_argument('--mesh_dir', default= "samples")
     parser.add_argument('--output_mesh_file', default= "mesh_sample.obj")
-    parser.add_argument('--speed', type=float, default=1.0)
     parser.add_argument('--frame_step', type=int, default=1)
     opt = parser.parse_args()
     svo_dir = opt.svo_dir
     input_svo_file = opt.input_svo_file
     mesh_dir = opt.mesh_dir
     output_mesh_file = opt.output_mesh_file
-    speed = opt.speed # SVO再生速度調整パラメータ
     frame_step = opt.frame_step # フレーム間隔
 
     # -----------------------------------------------------------------------
@@ -98,9 +95,8 @@ def main():
     runtime_params = sl.RuntimeParameters()
     runtime_params.confidence_threshold = 50
 
-    # 画像・点群・ポーズを格納するためのオブジェクト生成
+    # 画像・ポーズを格納するためのオブジェクト生成
     image = sl.Mat()
-    point_cloud = sl.Mat()
     pose = sl.Pose()
 
     # 位置推定の基準（原点）をリセット
@@ -119,24 +115,24 @@ def main():
         print("Enable Spatial Mapping : " + repr(returned_state) + ". Exit program.")
         exit()
 
+    # メッシュデータをクリア
+    pymesh.clear()
+    viewer.clear_current_mesh()
+
     # OpenGL ビューワ（ogl_viewer）を生成
     viewer = gl.GLViewer()
     viewer.init(camera_infos.camera_configuration.calibration_parameters.left_cam, pymesh, 1)
 
-    # メッシュ／点群データをクリア
-    pymesh.clear()
-    viewer.clear_current_mesh()
+    # last_call = time.time()
 
-    last_call = time.time()
-
-    Exit = False # SVOの終端に到達したかどうかのフラグ
-
-    pre_timestamp = None # 前フレームのタイムスタンプ（ms）
+    end_of_file = False # SVOの終端に到達したかどうかのフラグ
 
     frame_count = 0  # 処理したフレーム数カウンタ
+    extract_mesh_frame_count = 0 # メッシュを抽出する時用のフレーム数カウンタ
 
     running = True # プログラム実行フラグ
     ZED_running = False # ZEDカメラ動作フラグ
+    mapping_running = False # 空間マッピング実行フラグ
 
     while running:
 
@@ -144,57 +140,75 @@ def main():
         print("Press 'SPACE' to start", end="\r") # 同じ行に上書き表示
         if keyboard.is_pressed('space'):
             print("Start to program(space key pressed).")
-            ZED_running = True
+            zed_running = True
 
         # メインループ
-        while viewer.is_available() and ZED_running:
+        while viewer.is_available() and zed_running:
+        
+            err = zed.grab(runtime_params) # 新しいフレームを取得
 
-            grab_svo = zed.grab(runtime_params)
-            if grab_svo == sl.ERROR_CODE.SUCCESS:
+            # 指定されたフレーム間隔で処理をスキップ
+            frame_count += 1
+            if frame_count % frame_step != 0:
+                continue 
 
-                frame_count += 1
-                if frame_count % frame_step != 0:
-                    continue  # 指定されたフレーム間隔で処理をスキップ
+            if err == sl.ERROR_CODE.SUCCESS:
 
-                zed.retrieve_image(image, sl.VIEW.LEFT)
+                if mapping_running == False:
+                    mapping_running = True
 
-                # # SVO再生速度調整
-                # timestamp = zed.get_timestamp(sl.TIME_REFERENCE.CURRENT) # 現在のフレームのタイムスタンプを取得
-                # ms_timestamp = timestamp.get_milliseconds() # タイムスタンプをミリ秒単位で取得
-                # if pre_timestamp is not None:
-                #     delta = ms_timestamp - pre_timestamp
-                #     wait_time = (delta / 1000.0) / speed
-                #     if delta > 0:
-                #         time.sleep(wait_time)
-                # pre_timestamp = ms_timestamp
+            elif err == sl.ERROR_CODE.END_OF_SVOFILE:
+ 
+                print("End of SVO reached.")
+                end_of_file = True
+                if mapping_running == False:
+                    mapping_running = True
+
+            else:
+                print("Failed to get the frame.")
+                mapping_running = False
+                continue
+
+            zed.retrieve_image(image, sl.VIEW.LEFT)
+
+            if mapping_running:
 
                 tracking_state = zed.get_position(pose)
                 mapping_state = zed.get_spatial_mapping_state()
-                duration = time.time() - last_call
-                if duration > .5 and viewer.chunks_updated():
-                    zed.request_spatial_map_async()
-                    last_call = time.time()
-                if zed.get_spatial_map_request_status_async() == sl.ERROR_CODE.SUCCESS:
-                    zed.retrieve_spatial_map_async(pymesh)
-                    viewer.update_chunks()
-                change_state = viewer.update_view(image, pose.pose_data(), tracking_state, mapping_state)
 
-            elif grab_svo == sl.ERROR_CODE.END_OF_SVOFILE_REACHED:
-                Exit = True
-                print("End of SVO reached. Exiting loop.")
-                ZED_running = False
+                # duration = time.time() - last_call
+                # if duration > .5 and viewer.chunks_updated(): ← チャンク更新の頻度は検討中
+                zed.request_spatial_map_async() # 更新されたチャンクを非同期で作成するよう要求
+                    # last_call = time.time()
+                if zed.get_spatial_map_request_status_async() == sl.ERROR_CODE.SUCCESS:
+                    zed.retrieve_spatial_map_async(pymesh) # GPU側で処理が終わった最新チャンクをpymesh.chunksにコピー（部分更新）
+                    viewer.update_chunks() # 外部からチャンクが更新されたことを通知
+
+                extract_mesh_frame_count += 1
+                if extract_mesh_frame_count >= 10:
+                    zed.extract_whole_spatial_map(pymesh) # pymeshに含まれる全チャンクを結合し、抽出
+                    extract_mesh_frame_count = 0
+            
+            change_state = viewer.update_view(image, pose.pose_data(), tracking_state, mapping_state)
+
+            if end_of_file:
+                zed_running = False
                 running = False
 
             if keyboard.is_pressed('esc'):
                 print("Exiting loop(esc key pressed).")
-                ZED_running = False
+                zed_running = False
                 running = False
+
+    # 解放処理1
+    zed.disable_spatial_mapping()
+    zed.disable_positional_tracking()
 
     viewer.clear_current_mesh()   
 
-    zed.extract_whole_spatial_map(pymesh) # 結果抽出
+    zed.extract_whole_spatial_map(pymesh) # pymeshに含まれる全チャンクを結合し、抽出
 
-    # if Exit:
+    # if end_of_file:
     # メッシュフィルタリング
     filter_params = sl.MeshFilterParameters()
     filter_params.set(sl.MESH_FILTER.MEDIUM)
@@ -214,12 +228,9 @@ def main():
 
     mapping_state = sl.SPATIAL_MAPPING_STATE.NOT_ENABLED
 
-    # 解放処理
-    zed.disable_spatial_mapping()
-    zed.disable_positional_tracking()
+    # 解放処理2
     pymesh.clear()
     image.free()
-    point_cloud.free()
     zed.close()
 
 def parse_args(init_params, svo_dir, input_svo_file):
