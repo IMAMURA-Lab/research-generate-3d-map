@@ -123,13 +123,11 @@ def main():
                         continue
 
                     cv2.imshow(window_name, image_ocv) # OpenCV ウィンドウに表示
+                    cv2.waitKey(1)
+
                 else:
                     print("Failed to retrieve image")
-
-                # Escキーが押されたら終了
-                if cv2.waitKey(3) & 0xFF == 27:
-                    print("Stopping recording (esc pressed).")
-                    break
+                    continue
 
                 frames_recorded += 1
                 

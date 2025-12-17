@@ -7,7 +7,6 @@
 # 処理を軽くできるよう調整中
 
 import csv  # CSVファイルへの書き込み用ライブラリ
-import sys  # システム関連機能の利用（終了など）
 import pyzed.sl as sl
 from signal import signal, SIGINT  # Ctrl+Cなどのシグナルを扱うため
 import argparse
@@ -72,6 +71,8 @@ def main():
     
     frames_recorded = 0  # 録画フレーム数カウンタ
 
+    total_of_frames = 0 # 総フレーム数
+
     # IMUデータを記録するCSVファイルを作成
     imu_csv_file = open("imu_data.csv", mode="w", newline="")
     csv_writer = csv.writer(imu_csv_file)
@@ -111,16 +112,15 @@ def main():
         # Ctrl+Cが押されたら停止
         if stop_signal:
             print("Exiting loop(Ctrl+C pressed).")
-            print("Final Frame count: " + str(frames_recorded))
+            total_of_frames = frames_recorded
+            print("Total of frames: " + str(total_of_frames))
             break
 
-    # CSVファイルを閉じる
+    # 解放処理
     imu_csv_file.flush()
     imu_csv_file.close()
-
-    zed.disable_recording() # 録画を停止
-    zed.close() # カメラを閉じる
-    sys.exit(0) # プログラムを終了
+    zed.disable_recording()
+    zed.close()
 
 if __name__ == "__main__":
 

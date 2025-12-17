@@ -17,6 +17,7 @@ import numpy as np
 import pyzed.sl as sl
 from ultralytics import YOLO
 import argparse
+import keyboard
 
 def distance_calculation(depth, xmax, xmin, ymax, ymin, step):
 
@@ -87,7 +88,8 @@ def main():
     # -----------------------------------------------------------------------
     init_params = sl.InitParameters()
     init_params.camera_resolution = sl.RESOLUTION.HD720
-    init_params.depth_mode = sl.DEPTH_MODE.NEURAL
+    # init_params.depth_mode = sl.DEPTH_MODE.NEURAL
+    init_params.depth_mode = sl.DEPTH_MODE.QUALITY
     init_params.coordinate_units = sl.UNIT.METER # 単位（メートル）を指定
     init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP # 座標系の選択
 
@@ -126,17 +128,18 @@ def main():
     pose = sl.Pose()
 
     running = True # プログラム実行フラグ
-    ZED_running = False # ZEDカメラ動作フラグ
+    zed_running = False # ZEDカメラ動作フラグ
 
     while running:
 
         # スペースキー入力で開始
         print("Press 'SPACE' to start", end="\r") # 同じ行に上書き表示
-        if cv2.waitKey(1) == 32:
-            ZED_running = True
+        if keyboard.is_pressed('space'):
+            print("Start to program(space key pressed).")
+            zed_running = True
 
         # メインループ
-        while ZED_running:
+        while zed_running:
 
             # フレーム取得
             if zed.grab(runtime_params) != sl.ERROR_CODE.SUCCESS:
@@ -190,13 +193,14 @@ def main():
                         label = f"{class_name} {conf:.2f}  dist:{distance:.2f}m"
 
                     cv2.putText(image_ocv, label, (xmin, ymin - 10), # 物体名と距離
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 1)
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
 
             cv2.imshow("Viewew [detection_object]", image_ocv)
+            cv2.waitKey(1)
 
-            # ESCキーで終了
-            if cv2.waitKey(1) == 27:
-                ZED_running = False
+            if keyboard.is_pressed('esc'):
+                print("Exiting loop(esc key pressed).")
+                zed_running = False
                 running = False
 
     # 解放処理
