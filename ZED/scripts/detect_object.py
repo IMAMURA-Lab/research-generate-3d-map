@@ -1,12 +1,11 @@
 # 物体検出を行うスクリプト
 # 実行例
-# python detection_object.py
+# python detect_object.py
 # --model_name: 学習モデル名（label_studio_project/work/以下のフォルダ名）
 # --train: 学習モデルが入っているフォルダ名（run/runs/detect/以下のフォルダ名、例：train1）
-# --step: 深度計算をする際の計算する間隔（デフォルト 5）
 
 # 独自学習モデル用に変更済み
-# より精密な深度計算に変更済み（未検証）
+# より精密な深度計算に変更済み
 # 物体を検出した際に、どの段階で座標を登録するのかを検討中
 # →今のところは、三秒間検出した時点で登録で検討中
 # →1つのモデルに対して、一回までしか登録が出来ないのが問題点
@@ -19,10 +18,11 @@ from ultralytics import YOLO
 import argparse
 import keyboard
 
-def distance_calculation(depth, xmax, xmin, ymax, ymin, step):
+def distance_calculation(depth, xmax, xmin, ymax, ymin):
 
     height = ymax - ymin
     width = xmax - xmin
+    step = 10 # 距離計算のためのプロット間隔
 
     if width <= 0 or height <= 0:
         return None
@@ -61,11 +61,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, required=True)
     parser.add_argument("--train", type=str, required=True)
-    parser.add_argument("--step", type=int, default=5)
     opt = parser.parse_args()
     model_name = opt.model_name
     train = opt.train
-    step = opt.step
 
     # -----------------------------
     # YOLOv8モデル設定
@@ -116,7 +114,6 @@ def main():
     #     print("Failed to enable positional tracking:", err)
     #     zed.close()
     #     exit(1)
-
     # positional_tracking_params.set_floor_as_origin = True # 床を原点にする
 
     runtime_params = sl.RuntimeParameters() # Grab() で使うランタイムパラメータ
@@ -179,7 +176,7 @@ def main():
                     # 信頼度
                     conf = float(bbox.conf[0])
 
-                    distance = distance_calculation(depth, xmax, xmin, ymax, ymin, step)
+                    distance = distance_calculation(depth, xmax, xmin, ymax, ymin)
 
                     # -----------------------------
                     # 描画

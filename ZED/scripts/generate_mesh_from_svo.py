@@ -36,21 +36,21 @@ def main():
     parser.add_argument('--mesh_dir', default= "samples")
     parser.add_argument('--output_mesh_file', default= "mesh_sample.obj")
     parser.add_argument('--frame_step', type=int, default=1)
-    # parser.add_argument('--total_of_frames', type=int, required=True)
     opt = parser.parse_args()
     svo_dir = opt.svo_dir
     input_svo_file = opt.input_svo_file
     mesh_dir = opt.mesh_dir
     output_mesh_file = opt.output_mesh_file
     frame_step = opt.frame_step # フレーム間隔
-    # total_of_frames = opt.total_of_frames
 
     # -----------------------------------------------------------------------
     # 初期化パラメータの設定
     # -----------------------------------------------------------------------
     init_params = sl.InitParameters()
     parse_args(init_params, svo_dir, input_svo_file)
+    # init_params.svo_real_time_mode = True
     # init_params.depth_mode = sl.DEPTH_MODE.NEURAL # 深度モードの設定
+    # init_params.depth_mode = sl.DEPTH_MODE.NEURAL_LIGHT # 深度モードの設定
     init_params.depth_mode = sl.DEPTH_MODE.QUALITY # 深度モードの設定
     init_params.coordinate_units = sl.UNIT.METER # 単位（メートル）を指定
     init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP # 座標系の選択
@@ -104,7 +104,7 @@ def main():
         resolution=sl.MAPPING_RESOLUTION.MEDIUM,
         mapping_range=sl.MAPPING_RANGE.MEDIUM,
         max_memory_usage=2048,
-        save_texture=True,
+        save_texture=False,
         use_chunk_only=True,
         reverse_vertex_order=False,
         map_type=sl.SPATIAL_MAP_TYPE.MESH
@@ -122,11 +122,14 @@ def main():
     viewer.clear_current_mesh()
     viewer.init(camera_infos.camera_configuration.calibration_parameters.left_cam, pymesh, 1)
 
-    end_of_file = False # SVOの終端に到達したかどうかのフラグ
+    total_of_frames = zed.get_svo_number_of_frames() # 総フレーム数
 
-    frame_count = 0  # 処理したフレーム数カウンタ
-    extract_mesh_frame_count = 0 # メッシュを抽出する時用のフレーム数カウンタ
-    update_chunk_count = 0 # チャンクを更新する時用のフレーム数カウンタ
+    end_of_file = False # SVOの終端に到達したかどうかのフラグ
+    update_chunk =False # チャンクを更新するかのフラグ
+    extract_mesh = False # メッシュを抽出するかのフラグ
+
+    update_chunk_frame_step = 15 # チャンクを更新するフレーム間隔
+    extract_mesh_frame_step = 100 # メッシュを抽出するフレーム間隔
 
     running = True # プログラム実行フラグ
     zed_running = False # ZEDカメラ動作フラグ
@@ -145,26 +148,33 @@ def main():
         
             err = zed.grab(runtime_params) # 新しいフレームを取得
 
-            frame_count += 1
-            print(f"frame_count: {frame_count}", end="\r")
+            current_frame = zed.get_svo_position() + 1 # 現在のフレーム
 
-            # print(f"frame/total_of_frames : {frame_count}/{total_of_frames}", end="\r")
+            print(f"frame/total_of_frames : {current_frame}/{total_of_frames}", end="\r")
 
             # 指定されたフレーム間隔で処理をスキップ
-            if frame_count % frame_step != 0:
-                continue 
+            # if frame_count % frame_step != 0:
+            #     continue
+
+            if current_frame % update_chunk_frame_step == 0:
+                update_chunk = True
+
+            if current_frame % extract_mesh_frame_step == 0:
+                extract_mesh = True
 
             if err == sl.ERROR_CODE.SUCCESS:
 
                 if mapping_running == False:
-                    mapping_running = True
+                    mapping_running = True                    
 
-            elif err == sl.ERROR_CODE.END_OF_SVOFILE_REACHED:
+                if current_frame == total_of_frames:
+                    end_of_file = True
+                    print("End of SVO reached.")
+
+            # elif err == sl.ERROR_CODE.END_OF_SVOFILE_REACHED:
  
-                print("End of SVO reached.")
-                end_of_file = True
-                if mapping_running == False:
-                    mapping_running = True
+            #     if mapping_running == False:
+            #         mapping_running = True
 
             else:
                 print("Failed to get the frame.")
@@ -178,20 +188,17 @@ def main():
                 tracking_state = zed.get_position(pose)
                 mapping_state = zed.get_spatial_mapping_state()
 
-                if update_chunk_count >= 3:
+                if update_chunk or (end_of_file and not update_chunk):
                     zed.request_spatial_map_async() # 更新されたチャンクを非同期で作成するよう要求
                     if zed.get_spatial_map_request_status_async() == sl.ERROR_CODE.SUCCESS:
                         zed.retrieve_spatial_map_async(pymesh) # GPU側で処理が終わった最新チャンクをpymesh.chunksにコピー（部分更新）
                         viewer.update_chunks() # 外部からチャンクが更新されたことを通知
-                        print("Complete Update chunk.\n")
-                    update_chunk_count = 0
+                    update_chunk = False
 
-                extract_mesh_frame_count += 1
-                print(f"extract_mesh_frame_count: {extract_mesh_frame_count}", end="\r")
-                if extract_mesh_frame_count >= 10:
+                if extract_mesh:
                     zed.extract_whole_spatial_map(pymesh) # pymeshに含まれる全チャンクを結合し、抽出
-                    print("Complete extract mesh.\n")
-                    extract_mesh_frame_count = 0
+                    print("\nComplete extract mesh.\n")
+                    extract_mesh = False
             
                 viewer.update_view(image, pose.pose_data(), tracking_state, mapping_state)
 
