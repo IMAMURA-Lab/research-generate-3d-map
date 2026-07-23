@@ -1,0 +1,6 @@
+# パイプライン全体の設定(各yamlの参照をまとめる)
+
+capture_config: "configs/capture.yaml"
+sync_config: "configs/sync.yaml"
+detection_config: "configs/detection.yaml"
+tracking_config: "configs/tracking.yaml"
