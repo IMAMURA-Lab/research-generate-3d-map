@@ -1,4 +1,0 @@
-# 物体検出(YOLO)の設定
-
-model_path: "models/best.pt"
-confidence_threshold: 0.5

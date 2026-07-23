@@ -1,4 +1,0 @@
-# 物体ID管理(Tracker3D)の設定
-
-distance_threshold: 0.5   # 同一物体とみなす距離のしきい値(メートル)
-update_method: "overwrite"  # "overwrite" | "average" | "filter" (要検討)
