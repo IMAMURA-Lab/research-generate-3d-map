@@ -57,15 +57,15 @@ Unity/research-rescue-info-vision_clone_0/
 # =========================
 
 # dataフォルダは一旦除外（今後フォルダのみ管理する可能性あり）
-ZED/*
-!ZED/assets/.gitkeep
-!ZED/configs/.gitkeep
-!ZED/data/.gitkeep
-!ZED/outputs/.gitkeep
-!ZED/scripts/.gitkeep
-!ZED/src/.gitkeep
-!ZED/tests/.gitkeep
-!ZED/tools/.gitkeep
+# ZED/*
+# !ZED/assets/.gitkeep
+# !ZED/configs/.gitkeep
+# !ZED/data/.gitkeep
+# !ZED/outputs/.gitkeep
+# !ZED/scripts/.gitkeep
+# !ZED/src/.gitkeep
+# !ZED/tests/.gitkeep
+# !ZED/tools/.gitkeep
 
 # ZED/README.md
 # ZED/requirements.txt
