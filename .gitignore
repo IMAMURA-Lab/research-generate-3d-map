@@ -56,19 +56,25 @@ Unity/research-rescue-info-vision_clone_0/
 # ZED
 # =========================
 
-# dataフォルダは一旦除外（今後フォルダのみ管理する可能性あり）
-# ZED/*
-# !ZED/assets/.gitkeep
-# !ZED/configs/.gitkeep
-# !ZED/data/.gitkeep
-# !ZED/outputs/.gitkeep
-# !ZED/scripts/.gitkeep
-# !ZED/src/.gitkeep
-# !ZED/tests/.gitkeep
-# !ZED/tools/.gitkeep
+ZED/assets/*
+!ZED/assets/.gitkeep
+ZED/configs/*
+!ZED/configs/.gitkeep
+ZED/data/*
+!ZED/data/.gitkeep
+ZED/outputs/*
+!ZED/outputs/.gitkeep
+ZED/scripts/*
+!ZED/scripts/.gitkeep
+ZED/src/*
+!ZED/src/.gitkeep
+ZED/tests/*
+!ZED/tests/.gitkeep
+ZED/tools/*
+!ZED/tools/.gitkeep
 
-# ZED/README.md
-# ZED/requirements.txt
+ZED/README.md
+ZED/requirements.txt
 
 # =========================
 # Visual Studio / VS Code
