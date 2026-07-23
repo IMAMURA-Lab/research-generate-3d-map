@@ -56,25 +56,15 @@ Unity/research-rescue-info-vision_clone_0/
 # ZED
 # =========================
 
-ZED/assets/*
+ZED/*
 !ZED/assets/.gitkeep
-ZED/configs/*
 !ZED/configs/.gitkeep
-ZED/data/*
 !ZED/data/.gitkeep
-ZED/outputs/*
 !ZED/outputs/.gitkeep
-ZED/scripts/*
 !ZED/scripts/.gitkeep
-ZED/src/*
 !ZED/src/.gitkeep
-ZED/tests/*
 !ZED/tests/.gitkeep
-ZED/tools/*
 !ZED/tools/.gitkeep
-
-ZED/README.md
-ZED/requirements.txt
 
 # =========================
 # Visual Studio / VS Code
