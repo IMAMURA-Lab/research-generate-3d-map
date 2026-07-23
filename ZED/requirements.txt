@@ -1,7 +1,0 @@
-pyzed
-ultralytics
-open3d
-numpy
-opencv-python
-pyyaml
-pytest
