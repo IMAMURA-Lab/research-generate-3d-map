@@ -14,7 +14,7 @@ label_studio_project/*
 !label_studio_project/.gitkeep
 
 # =========================
-# Unity
+# visualization (Unity)
 # =========================
 
 [Ll]ibrary/
@@ -26,12 +26,12 @@ label_studio_project/*
 UserSettings/
 
 # メッシュファイルは除外
-Unity/RescueMapSystem/Assets/Meshs/*
-!Unity/RescueMapSystem/Assets/Meshs/.gitkeep
+visualization/RescueMapSystem/Assets/Meshs/*
+!visualization/RescueMapSystem/Assets/Meshs/.gitkeep
 
 # Resourcesフォルダ内データは除外
-Unity/RescueMapSystem/Assets/Resources/*
-!Unity/RescueMapSystem/Assets/Resources/.gitkeep
+visualization/RescueMapSystem/Assets/Resources/*
+!visualization/RescueMapSystem/Assets/Resources/.gitkeep
 
 # MemoryCaptures
 [Mm]emoryCaptures/
@@ -49,22 +49,22 @@ Unity/RescueMapSystem/Assets/Resources/*
 *.htm
 
 # 一旦保留
-Unity/research-rescue-info-vision/
-Unity/research-rescue-info-vision_clone_0/
+visualization/research-rescue-info-vision/
+visualization/research-rescue-info-vision_clone_0/
 
 # =========================
-# ZED
+# measurement (ZED/LiDAR)
 # =========================
 
-ZED/*
-!ZED/assets/.gitkeep
-!ZED/configs/.gitkeep
-!ZED/data/.gitkeep
-!ZED/outputs/.gitkeep
-!ZED/scripts/.gitkeep
-!ZED/src/.gitkeep
-!ZED/tests/.gitkeep
-!ZED/tools/.gitkeep
+measurement/*
+!measurement/assets/.gitkeep
+!measurement/configs/.gitkeep
+!measurement/data/.gitkeep
+!measurement/outputs/.gitkeep
+!measurement/scripts/.gitkeep
+!measurement/src/.gitkeep
+!measurement/tests/.gitkeep
+!measurement/tools/.gitkeep
 
 # =========================
 # Visual Studio / VS Code
