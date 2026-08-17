@@ -6,12 +6,39 @@ docs/*
 !docs/.gitkeep
 
 # =========================
-# label studio
+# detection_model_project
 # =========================
 
-# label studioのフォルダは一旦除外（今後フォルダのみ管理する可能性あり）
-label_studio_project/*
-!label_studio_project/.gitkeep
+# フォルダのひな型(.gitkeep)のみ管理対象。N_日付_特筆事項/ 以下の実データは管理対象外
+# (親が除外されると個別の再包含は効かないため、各階層ごとに un-ignore → 直下を再度 ignore → 次階層を un-ignore … と辿る)
+detection_model_project/*
+!detection_model_project/requirements.txt
+!detection_model_project/tools/
+detection_model_project/tools/*
+!detection_model_project/tools/.gitkeep
+!detection_model_project/sample_images/
+detection_model_project/sample_images/*
+!detection_model_project/sample_images/fire/
+detection_model_project/sample_images/fire/*
+!detection_model_project/sample_images/fire/.gitkeep
+!detection_model_project/sample_images/survivor/
+detection_model_project/sample_images/survivor/*
+!detection_model_project/sample_images/survivor/.gitkeep
+!detection_model_project/export/
+detection_model_project/export/*
+!detection_model_project/export/.gitkeep
+!detection_model_project/annotations/
+detection_model_project/annotations/*
+!detection_model_project/annotations/.gitkeep
+!detection_model_project/dataset/
+detection_model_project/dataset/*
+!detection_model_project/dataset/.gitkeep
+!detection_model_project/training_results/
+detection_model_project/training_results/*
+!detection_model_project/training_results/.gitkeep
+!detection_model_project/base_weights/
+detection_model_project/base_weights/*
+!detection_model_project/base_weights/.gitkeep
 
 # =========================
 # visualization (Unity)
@@ -57,44 +84,14 @@ visualization/research-rescue-info-vision_clone_0/
 # =========================
 
 measurement/*
-!measurement/assets/.gitkeep
+!measurement/requirements.txt
+!measurement/models/.gitkeep
 !measurement/configs/.gitkeep
 !measurement/data/.gitkeep
 !measurement/scripts/.gitkeep
 !measurement/src/.gitkeep
 !measurement/tests/.gitkeep
 !measurement/tools/.gitkeep
-
-# detection_model_project: フォルダのひな型(.gitkeep)のみ管理対象。
-# N_日付_特筆事項/ 以下の実データは管理対象外(親が除外されると個別の再包含は効かないため、
-# 各階層ごとに un-ignore → 直下を再度 ignore → 次階層を un-ignore … と辿る)
-!measurement/detection_model_project/
-measurement/detection_model_project/*
-!measurement/detection_model_project/rescue_detection/
-measurement/detection_model_project/rescue_detection/*
-!measurement/detection_model_project/rescue_detection/sample_images/
-measurement/detection_model_project/rescue_detection/sample_images/*
-!measurement/detection_model_project/rescue_detection/sample_images/fire/
-measurement/detection_model_project/rescue_detection/sample_images/fire/*
-!measurement/detection_model_project/rescue_detection/sample_images/fire/.gitkeep
-!measurement/detection_model_project/rescue_detection/sample_images/survivor/
-measurement/detection_model_project/rescue_detection/sample_images/survivor/*
-!measurement/detection_model_project/rescue_detection/sample_images/survivor/.gitkeep
-!measurement/detection_model_project/rescue_detection/export/
-measurement/detection_model_project/rescue_detection/export/*
-!measurement/detection_model_project/rescue_detection/export/.gitkeep
-!measurement/detection_model_project/rescue_detection/annotations/
-measurement/detection_model_project/rescue_detection/annotations/*
-!measurement/detection_model_project/rescue_detection/annotations/.gitkeep
-!measurement/detection_model_project/rescue_detection/dataset/
-measurement/detection_model_project/rescue_detection/dataset/*
-!measurement/detection_model_project/rescue_detection/dataset/.gitkeep
-!measurement/detection_model_project/rescue_detection/training_results/
-measurement/detection_model_project/rescue_detection/training_results/*
-!measurement/detection_model_project/rescue_detection/training_results/.gitkeep
-!measurement/detection_model_project/rescue_detection/base_weights/
-measurement/detection_model_project/rescue_detection/base_weights/*
-!measurement/detection_model_project/rescue_detection/base_weights/.gitkeep
 
 # =========================
 # Visual Studio / VS Code
