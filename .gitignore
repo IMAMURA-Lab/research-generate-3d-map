@@ -60,11 +60,41 @@ measurement/*
 !measurement/assets/.gitkeep
 !measurement/configs/.gitkeep
 !measurement/data/.gitkeep
-!measurement/outputs/.gitkeep
 !measurement/scripts/.gitkeep
 !measurement/src/.gitkeep
 !measurement/tests/.gitkeep
 !measurement/tools/.gitkeep
+
+# detection_model_project: フォルダのひな型(.gitkeep)のみ管理対象。
+# N_日付_特筆事項/ 以下の実データは管理対象外(親が除外されると個別の再包含は効かないため、
+# 各階層ごとに un-ignore → 直下を再度 ignore → 次階層を un-ignore … と辿る)
+!measurement/detection_model_project/
+measurement/detection_model_project/*
+!measurement/detection_model_project/rescue_detection/
+measurement/detection_model_project/rescue_detection/*
+!measurement/detection_model_project/rescue_detection/sample_images/
+measurement/detection_model_project/rescue_detection/sample_images/*
+!measurement/detection_model_project/rescue_detection/sample_images/fire/
+measurement/detection_model_project/rescue_detection/sample_images/fire/*
+!measurement/detection_model_project/rescue_detection/sample_images/fire/.gitkeep
+!measurement/detection_model_project/rescue_detection/sample_images/survivor/
+measurement/detection_model_project/rescue_detection/sample_images/survivor/*
+!measurement/detection_model_project/rescue_detection/sample_images/survivor/.gitkeep
+!measurement/detection_model_project/rescue_detection/export/
+measurement/detection_model_project/rescue_detection/export/*
+!measurement/detection_model_project/rescue_detection/export/.gitkeep
+!measurement/detection_model_project/rescue_detection/annotations/
+measurement/detection_model_project/rescue_detection/annotations/*
+!measurement/detection_model_project/rescue_detection/annotations/.gitkeep
+!measurement/detection_model_project/rescue_detection/dataset/
+measurement/detection_model_project/rescue_detection/dataset/*
+!measurement/detection_model_project/rescue_detection/dataset/.gitkeep
+!measurement/detection_model_project/rescue_detection/training_results/
+measurement/detection_model_project/rescue_detection/training_results/*
+!measurement/detection_model_project/rescue_detection/training_results/.gitkeep
+!measurement/detection_model_project/rescue_detection/base_weights/
+measurement/detection_model_project/rescue_detection/base_weights/*
+!measurement/detection_model_project/rescue_detection/base_weights/.gitkeep
 
 # =========================
 # Visual Studio / VS Code
